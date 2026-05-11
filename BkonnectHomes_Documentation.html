@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BkonnectHomes - Official System Documentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #f8fafc;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+
+        .cover-page {
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            color: #7c3aed;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: #7c3aed;
+            margin-top: 30px;
+        }
+
+        p, li {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 15px;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #f3e8ff, #e0e7ff);
+            border-left: 5px solid #7c3aed;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .wireframe-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .author {
+            margin-top: auto;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .cover-page { height: 100vh; }
+            .wireframe-container { box-shadow: none; border: none; }
+        }
+    </style>
+    <!-- Include Mermaid.js for visual rendering -->
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+    </script>
+</head>
+<body>
+
+    <!-- COVER PAGE -->
+    <div class="cover-page">
+        <h1>BkonnectHomes</h1>
+        <p style="font-size: 1.5rem; font-weight: 600;">Technical System Documentation & Architecture</p>
+        <p style="font-size: 1.2rem; color: #64748b; margin-top: 20px;">A premium accommodation booking platform designed for university students in Uganda.</p>
+        <div class="author">
+            <p>Made with ❤️ by Kazi Chris</p>
+            <p>Generated: May 2026</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 1: SYSTEM OVERVIEW -->
+    <h2>1. Executive Overview</h2>
+    <p><strong>BkonnectHomes</strong> is a robust, full-stack web application designed to bridge the gap between university students searching for safe accommodation and property owners looking to manage their hostel listings.</p>
+    
+    <div class="highlight-box">
+        <strong>Primary Objective:</strong> Eliminate the manual, time-consuming process of hostel hunting by providing a centralized digital ledger for discovery, side-by-side comparison, and instant bookings.
+    </div>
+
+    <h3>1.1 Technology Stack</h3>
+    <ul>
+        <li><strong>Frontend Layer:</strong> React.js, Vite, TailwindCSS (for responsive, premium styling), Lucide-React (iconography).</li>
+        <li><strong>Backend Layer:</strong> Node.js, Express.js (REST API).</li>
+        <li><strong>Database Layer:</strong> Prisma ORM connected to SQLite (Development) / PostgreSQL (Production).</li>
+        <li><strong>Security:</strong> JSON Web Tokens (JWT) for stateless authentication and bcrypt for password encryption.</li>
+    </ul>
+
+    <!-- SECTION 2: VISUAL ARCHITECTURE -->
+    <h2>2. System Wireframe & Visual Flow</h2>
+    <p>Below is the visual representation of the entire application architecture, mapping the user journey from discovery to booking and dashboard management.</p>
+    
+    <div class="wireframe-container">
+        <div class="mermaid">
+        flowchart TD
+            %% Base Entry
+            Entry([Open BkonnectHomes]) --> Navbar
+
+            %% Main Routing
+            Navbar -->|Search| Home[Home Page]
+            Navbar -->|Compare| Compare[Compare Page]
+            Navbar -->|Auth| Login[Login / Register]
+
+            %% Home Page
+            Home --> Filter[Category Filters]
+            Home --> HCard[Hostel Cards]
+
+            HCard -->|View| Details[Property Details]
+            HCard -->|Queue| Compare
+
+            %% Details
+            Details -->|Select Room| Book[Booking Engine]
+            
+            %% Booking
+            Book -->|Require Auth| Login
+            Login --> DashboardRouter{Role Check}
+
+            %% Dashboards
+            DashboardRouter -->|STUDENT| SDash[Student Dashboard]
+            DashboardRouter -->|OWNER| ODash[Owner Dashboard]
+            DashboardRouter -->|ADMIN| ADash[Admin Dashboard]
+
+            SDash -->|Tracks| Ledger[(Booking Ledger)]
+            ADash -->|Monitors| Ledger
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 3: USER ROLES -->
+    <h2>3. Role-Based Capabilities</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Permissions & System Capabilities</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>STUDENT</strong></td>
+                <td>Can browse properties, filter by "University" or "Private", use the comparison engine, favourite hostels, and place bookings. Dashboards track booking timestamps and statuses.</td>
+            </tr>
+            <tr>
+                <td><strong>OWNER</strong></td>
+                <td>Can register properties, upload base64 images, define room types (Single/Double), set monthly rent, and view incoming bookings for their specific properties.</td>
+            </tr>
+            <tr>
+                <td><strong>ADMIN</strong></td>
+                <td>A super-user account that accesses the Master Booking Ledger to oversee all transactions, monitor total platform metrics, and verify data integrity.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SECTION 4: CORE FEATURES -->
+    <h2>4. Core Technical Features</h2>
+    
+    <h3>4.1 The Comparison Engine</h3>
+    <p>A completely custom React Context (`CompareContext`) interacts with the browser's `localStorage` to create a persistent comparison queue. Up to 3 properties can be compared side-by-side, where the system dynamically calculates intersectional amenities (e.g., automatically detecting if all 3 hostels offer Wi-Fi) and renders starting prices.</p>
+
+    <h3>4.2 Booking Timestamps & Ledger</h3>
+    <p>All bookings utilize Prisma's `createdAt` schema to generate precise timestamp logs. These timestamps are formatted on the frontend to provide both the Admin and the Student with an exact audit trail of when reservations were initiated.</p>
+
+    <h3>4.3 Automated Fallback Imagery</h3>
+    <p>To guarantee a premium UI experience, the system utilizes a robust `onError` failsafe pattern for all property imagery. If an external URL fails or a CDN drops a request, the React components automatically intercept the error and inject a curated, high-quality, authentic Kampala student dorm image to maintain visual harmony.</p>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 5: DEPLOYMENT -->
+    <h2>5. Deployment Protocol</h2>
+    <p>The system is packaged and prepared for cloud deployment using standard configuration files (`vercel.json` and `render.yaml`).</p>
+    <ul>
+        <li><strong>Database Migration:</strong> A pre-deployment script (`fix_categories.js`) ensures all legacy data is normalized strictly into binary classifications (Private vs. University).</li>
+        <li><strong>Backend Hosting:</strong> The Node.js Express server is built to deploy on Render.com, exposing RESTful API endpoints.</li>
+        <li><strong>Frontend Edge Hosting:</strong> The React/Vite build is optimized for Vercel, ensuring fast global content delivery for the UI.</li>
+    </ul>
+
+    <div class="highlight-box" style="text-align: center; margin-top: 50px;">
+        <strong>End of Documentation</strong><br>
+        BkonnectHomes Platform Version 1.0.0
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BkonnectHomes - Official User Manual</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.7;
+            color: #333;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #f8fafc;
+        }
+        
+        .page-break { page-break-before: always; }
+
+        .cover-page {
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 { font-size: 3.5rem; color: #ec4899; margin-bottom: 10px; font-weight: 800; }
+        h2 { font-size: 2rem; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 50px; }
+        h3 { font-size: 1.4rem; color: #7c3aed; margin-top: 30px; display: flex; align-items: center; gap: 10px; }
+        
+        .step-number {
+            background-color: #7c3aed;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        p, li { font-size: 1.1rem; color: #475569; margin-bottom: 15px; }
+
+        .info-box {
+            background: #fff;
+            border-left: 5px solid #f97316;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 15px;
+        }
+        .role-student { background-color: #3b82f6; }
+        .role-owner { background-color: #10b981; }
+        .role-admin { background-color: #f43f5e; }
+
+        .author { margin-top: auto; color: #94a3b8; font-weight: 600; }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .cover-page { height: 100vh; }
+            .info-box { box-shadow: none; border: 1px solid #e2e8f0; border-left: 5px solid #f97316; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- COVER PAGE -->
+    <div class="cover-page">
+        <h1>BkonnectHomes</h1>
+        <p style="font-size: 1.5rem; font-weight: 600;">Step-by-Step User Manual</p>
+        <p style="font-size: 1.2rem; color: #64748b; margin-top: 20px;">A complete guide on how to navigate, book, and manage hostels on the platform.</p>
+        <div class="author">
+            <p>Made with ❤️ by Kazi Chris</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 1: GETTING STARTED -->
+    <h2>1. Getting Started (Registration & Login)</h2>
+    <p>Before using the platform, users must create an account to securely save data and track bookings.</p>
+    
+    <h3><span class="step-number">1</span> Creating an Account</h3>
+    <ul>
+        <li>Open the BkonnectHomes website in your browser.</li>
+        <li>Click the <strong>Log In</strong> button at the top right of the navigation bar.</li>
+        <li>Click <strong>"Sign up free"</strong> at the bottom of the login form.</li>
+        <li>Select your role by clicking either the <strong>🎓 Student</strong> or <strong>🏠 Owner</strong> button.</li>
+        <li>Fill out your full name, email, phone number, and password. If you are a student, select your University from the dropdown menu.</li>
+        <li>Click <strong>Create Account</strong>. You will be automatically logged in and redirected to your dashboard.</li>
+    </ul>
+
+    <h3><span class="step-number">2</span> Logging In</h3>
+    <ul>
+        <li>Navigate to the <strong>Log In</strong> page.</li>
+        <li>Enter your registered email and password.</li>
+        <li>Click <strong>Log In</strong> to access your secure dashboard.</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 2: STUDENT GUIDE -->
+    <h2>2. Guide for Students <span class="role-badge role-student">Student</span></h2>
+    <p>As a student, BkonnectHomes allows you to easily find, compare, and book the perfect room.</p>
+
+    <h3><span class="step-number">1</span> Finding a Hostel</h3>
+    <ul>
+        <li>Go to the <strong>Home Page</strong>.</li>
+        <li>Use the <strong>Search Bar</strong> at the top to type in a specific location (e.g., "Gayaza") or hostel name.</li>
+        <li>Use the circular <strong>Category Filters</strong> (e.g., "Bugema Uni", "Private Hostels") to instantly filter properties that match your requirements.</li>
+    </ul>
+
+    <h3><span class="step-number">2</span> Comparing Properties</h3>
+    <div class="info-box">
+        Not sure which hostel to pick? You can compare up to 3 properties side-by-side to make the best decision!
+    </div>
+    <ul>
+        <li>While browsing the Home Page, look for the small <strong>Scale Icon</strong> in the top-right corner of any hostel card.</li>
+        <li>Click the Scale Icon to add that hostel to your Compare List.</li>
+        <li>A floating button will appear at the bottom of your screen showing how many properties you have selected (e.g., "Compare (2)").</li>
+        <li>Click the floating button to open the <strong>Compare Engine</strong>. Here, you will see a detailed grid comparing prices, proximity, and shared amenities.</li>
+    </ul>
+
+    <h3><span class="step-number">3</span> Placing a Booking</h3>
+    <ul>
+        <li>Click on any hostel card to view its full details.</li>
+        <li>Scroll down to the <strong>Available Rooms</strong> section.</li>
+        <li>Find the room type you want (e.g., Single Room or Double Room) and click the <strong>Book Now</strong> button.</li>
+        <li>A success message will appear confirming your reservation.</li>
+    </ul>
+
+    <h3><span class="step-number">4</span> Managing Your Bookings</h3>
+    <ul>
+        <li>Click <strong>Dashboard</strong> in the top navigation bar.</li>
+        <li>In your Student Dashboard, you will see the <strong>My Bookings</strong> section.</li>
+        <li>This ledger shows exactly which hostels you booked, the exact date and time the booking was placed, and the current status of your reservation (Pending/Confirmed).</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 3: OWNER GUIDE -->
+    <h2>3. Guide for Hostel Owners <span class="role-badge role-owner">Owner</span></h2>
+    <p>If you own a property, you can list it on the platform to reach thousands of students instantly.</p>
+
+    <h3><span class="step-number">1</span> Adding a New Hostel</h3>
+    <ul>
+        <li>Log into your Owner account and click <strong>Dashboard</strong>.</li>
+        <li>Click the <strong>Add New Hostel</strong> button.</li>
+        <li>Fill out the property details: Name, Category (University vs. Private), Description, Street Address, Area, and the closest University.</li>
+        <li>Click <strong>Save Hostel</strong>. Your hostel is now created but currently has no rooms!</li>
+    </ul>
+
+    <h3><span class="step-number">2</span> Adding Rooms & Pricing</h3>
+    <div class="info-box">
+        Students cannot book your hostel until you add at least one Room Type with a price!
+    </div>
+    <ul>
+        <li>In your dashboard, click on the hostel you just created.</li>
+        <li>Scroll down to the <strong>Add Room</strong> section.</li>
+        <li>Select the Room Type (Single, Double, Suite, Custom).</li>
+        <li>Enter the Monthly Rent price (e.g., 500000).</li>
+        <li>Type out the amenities provided (e.g., "Wi-Fi, Personal Desk, Shared Bathroom").</li>
+        <li>Upload a high-quality photo of the room and click <strong>Add Room</strong>.</li>
+        <li>Your hostel is now live and visible to all students on the Home Page!</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <!-- SECTION 4: ADMIN GUIDE -->
+    <h2>4. Guide for Administrators <span class="role-badge role-admin">Admin</span></h2>
+    <p>Admins oversee the platform, ensuring bookings flow smoothly and monitoring total growth.</p>
+
+    <h3><span class="step-number">1</span> Accessing the Master Ledger</h3>
+    <ul>
+        <li>Log in using the secure Admin credentials.</li>
+        <li>Click <strong>Admin Panel</strong> in the top navigation menu.</li>
+        <li>At the top of the dashboard, you will see live statistics: Total Users, Total Hostels, and Total Bookings.</li>
+    </ul>
+
+    <h3><span class="step-number">2</span> Monitoring Activity</h3>
+    <ul>
+        <li>Scroll down to the <strong>Master Bookings Ledger</strong>.</li>
+        <li>This table displays every single booking made on the entire platform.</li>
+        <li>You can view the exact Date and Time the booking was made, the Student's name, the Hostel name, the specific Room ID, and the current payment/booking Status.</li>
+        <li>Use this ledger to contact owners and students to finalize their offline payments and rental agreements.</li>
+    </ul>
+
+</body>
+</html>

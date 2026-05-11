@@ -1,0 +1,17 @@
+# Uploaded receipt files
+uploads/receipts/*
+!uploads/receipts/.gitkeep
+
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# Database
+prisma/dev.db
+prisma/dev.db-journal
+
+# Logs
+*.log
+npm-debug.log*

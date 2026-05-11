@@ -1,0 +1,2 @@
+# This file ensures the receipts directory is tracked by git
+# Actual receipt files will be stored here and should be gitignored
