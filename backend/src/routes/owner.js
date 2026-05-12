@@ -73,12 +73,12 @@ router.put('/rooms/:roomId', authenticate, requireRole(['OWNER']), async (req, r
 
     if (photoUrl) {
       if (room.photos && room.photos.length > 0) {
-        await prisma.photo.update({
+        await prisma.roomPhoto.update({
           where: { id: room.photos[0].id },
           data: { url: photoUrl }
         });
       } else {
-        await prisma.photo.create({
+        await prisma.roomPhoto.create({
           data: { url: photoUrl, roomId: room.id, order: 0 }
         });
       }
