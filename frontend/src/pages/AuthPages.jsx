@@ -42,7 +42,7 @@ export const LoginPage = () => {
             <span className="text-white font-black text-2xl">B</span>
           </div>
           <h1 className="text-2xl font-black text-gray-900">Welcome back!</h1>
-          <p className="text-gray-500 mt-1 text-sm">Log in to your BkonnectHomes account</p>
+          <p className="text-gray-500 mt-1 text-sm">Log in to your BkonnectHostels account</p>
         </div>
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
           {error && <div className="bg-red-50 text-red-600 text-sm rounded-xl p-3 mb-5 text-center font-medium">{error}</div>}
@@ -110,7 +110,7 @@ export const SignupPage = () => {
           <div className="w-16 h-16 brand-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-white font-black text-2xl">B</span>
           </div>
-          <h1 className="text-2xl font-black text-gray-900">Join BkonnectHomes</h1>
+          <h1 className="text-2xl font-black text-gray-900">Join BkonnectHostels</h1>
           <p className="text-gray-500 mt-1 text-sm">Find your perfect student home today</p>
         </div>
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">

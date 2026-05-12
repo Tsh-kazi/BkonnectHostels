@@ -313,7 +313,7 @@ const HostelDetails = () => {
 
             <hr className="border-gray-100 mb-5" />
             <p className="text-xs text-gray-400 text-center leading-relaxed">
-              Reserving through BkonnectHomes guarantees your spot. The owner will follow up to arrange payment and move-in details.
+              Reserving through BkonnectHostels guarantees your spot. The owner will follow up to arrange payment and move-in details.
             </p>
           </div>
         </div>

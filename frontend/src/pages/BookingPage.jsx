@@ -14,6 +14,14 @@ const BookingPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [receipt, setReceipt] = useState(null);
 
+  // Payment Simulation States
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [showPinPrompt, setShowPinPrompt] = useState(false);
+  const [showVisaPrompt, setShowVisaPrompt] = useState(false);
+  const [visaDetails, setVisaDetails] = useState({ number: '', expiry: '', cvc: '', name: '' });
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentStep, setPaymentStep] = useState(1); // 1 = input, 2 = processing, 3 = success
+
   // Fetch hostel to get room details
   const { data: hostel, isLoading } = useQuery({
     queryKey: ['hostel', hostelId],
@@ -29,13 +37,15 @@ const BookingPage = () => {
   }, [user, navigate, hostelId, roomId]);
 
   const bookMutation = useMutation({
-    mutationFn: async () => {
-      const note = `Payment Method: ${paymentMethod.replace(/_/g, ' ')}`;
+    mutationFn: async ({ isPaid } = {}) => {
+      const note = `Payment Method: ${paymentMethod.replace(/_/g, ' ')}${isPaid ? ' (Paid via Mobile Money)' : ''}`;
       return await api.post('/bookings', {
         hostelId,
         roomId,
         startMonth: new Date().toISOString().slice(0, 7),
         durationMonths: duration,
+        paymentMethod,
+        paymentCompleted: !!isPaid,
         note
       });
     },
@@ -44,9 +54,54 @@ const BookingPage = () => {
       setIsSuccess(true);
     },
     onError: (err) => {
+      setIsProcessingPayment(false);
+      setShowPinPrompt(false);
       alert(err.response?.data?.error || "Booking failed.");
     }
   });
+
+  const handleConfirmReservation = () => {
+    if (paymentMethod === 'MOBILE_MONEY_MTN' || paymentMethod === 'MOBILE_MONEY_AIRTEL') {
+      setShowPinPrompt(true);
+      setShowVisaPrompt(false);
+      setPaymentStep(1);
+    } else if (paymentMethod === 'VISA_CARD') {
+      setShowVisaPrompt(true);
+      setShowPinPrompt(false);
+      setPaymentStep(1);
+    } else {
+      bookMutation.mutate();
+    }
+  };
+
+  const handleSimulatePayment = () => {
+    if (!phoneNumber) return;
+    setPaymentStep(2);
+    setIsProcessingPayment(true);
+    
+    // Simulate USSD Push wait
+    setTimeout(() => {
+      setPaymentStep(3);
+      // Create the booking automatically marked as paid
+      setTimeout(() => {
+        bookMutation.mutate({ isPaid: true });
+      }, 1500);
+    }, 4000);
+  };
+
+  const handleSimulateVisaPayment = () => {
+    if (!visaDetails.number || !visaDetails.expiry || !visaDetails.cvc) return;
+    setPaymentStep(2);
+    setIsProcessingPayment(true);
+    
+    // Simulate Bank/Visa Gateway processing wait
+    setTimeout(() => {
+      setPaymentStep(3);
+      setTimeout(() => {
+        bookMutation.mutate({ isPaid: true });
+      }, 1500);
+    }, 3500);
+  };
 
   if (isLoading) return <div className="page-content text-center py-20">Loading secure checkout...</div>;
   if (!hostel || !room) return <div className="page-content text-center py-20 text-red-500">Room not found.</div>;
@@ -74,15 +129,37 @@ const BookingPage = () => {
             </div>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 text-left">
-            <h4 className="text-amber-800 font-bold mb-2 flex items-center gap-2">⚠️ Finalize Payment</h4>
-            <p className="text-amber-700 text-sm leading-relaxed mb-3">
-              To guarantee your spot, you must complete your payment of <strong>UGX {totalAmount.toLocaleString()}</strong> via {paymentMethod.replace(/_/g, ' ')}.
-            </p>
-            <p className="text-amber-800 text-sm font-bold">
-              Call the Owner immediately at: <a href={`tel:${hostel.contactPhone}`} className="text-purple-700 underline">{hostel.contactPhone}</a>
-            </p>
-          </div>
+          {receipt?.paymentMethod === 'CASH_ON_ARRIVAL' ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 text-left">
+              <h4 className="text-amber-800 font-bold mb-2 flex items-center gap-2">⚠️ Reservation Pending Physical Check-in</h4>
+              <p className="text-amber-700 text-sm leading-relaxed mb-3">
+                You selected <strong>Pay on Arrival</strong>. Please note that this room is <strong className="underline">NOT guaranteed</strong> and may be given to someone else who completes their payment online first. 
+              </p>
+              <p className="text-amber-800 text-sm font-bold">
+                To try to secure it, call the Owner immediately at: <a href={`tel:${hostel.contactPhone}`} className="text-purple-700 underline">{hostel.contactPhone}</a>
+              </p>
+            </div>
+          ) : receipt?.status === 'CONFIRMED' || receipt?.paymentCompleted ? (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mb-8 text-left">
+              <h4 className="text-emerald-800 font-bold mb-2 flex items-center gap-2"><CheckCircle size={18}/> Reservation Finalized</h4>
+              <p className="text-emerald-700 text-sm leading-relaxed mb-3">
+                Your payment of <strong>UGX {totalAmount.toLocaleString()}</strong> has been verified. A digital receipt has been sent to your email.
+              </p>
+              <p className="text-emerald-800 text-sm font-bold">
+                Hostel Contact: <a href={`tel:${hostel.contactPhone}`} className="text-purple-700 underline">{hostel.contactPhone}</a>
+              </p>
+            </div>
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8 text-left">
+              <h4 className="text-amber-800 font-bold mb-2 flex items-center gap-2">⚠️ Finalize Payment</h4>
+              <p className="text-amber-700 text-sm leading-relaxed mb-3">
+                To guarantee your spot, you must complete your payment of <strong>UGX {totalAmount.toLocaleString()}</strong> via {paymentMethod.replace(/_/g, ' ')}.
+              </p>
+              <p className="text-amber-800 text-sm font-bold">
+                Call the Owner immediately at: <a href={`tel:${hostel.contactPhone}`} className="text-purple-700 underline">{hostel.contactPhone}</a>
+              </p>
+            </div>
+          )}
 
           <Link to="/dashboard" className="btn-brand w-full block text-center py-3">View My Bookings</Link>
         </div>
@@ -139,11 +216,15 @@ const BookingPage = () => {
               {[
                 { id: 'MOBILE_MONEY_MTN', name: 'MTN Mobile Money', icon: <Wallet size={20} className="text-yellow-500"/> },
                 { id: 'MOBILE_MONEY_AIRTEL', name: 'Airtel Money', icon: <Wallet size={20} className="text-red-500"/> },
-                { id: 'BANK_TRANSFER', name: 'Bank Transfer', icon: <CreditCard size={20} className="text-blue-500"/> },
-                { id: 'CASH_ON_ARRIVAL', name: 'Cash on Arrival', icon: <Banknote size={20} className="text-emerald-500"/> },
+                { id: 'CASH_ON_ARRIVAL', name: 'Pay on Arrival', icon: <Banknote size={20} className="text-emerald-500"/> },
+                { id: 'VISA_CARD', name: 'Visa / Mastercard', icon: <CreditCard size={20} className="text-blue-500"/> },
               ].map(method => (
                 <label key={method.id} className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === method.id ? 'border-purple-600 bg-purple-50' : 'border-gray-100 hover:border-purple-200'}`}>
-                  <input type="radio" name="payment" value={method.id} checked={paymentMethod === method.id} onChange={(e) => setPaymentMethod(e.target.value)} className="w-5 h-5 text-purple-600 focus:ring-purple-600" />
+                  <input type="radio" name="payment" value={method.id} checked={paymentMethod === method.id} onChange={(e) => {
+                    setPaymentMethod(e.target.value);
+                    setShowPinPrompt(false);
+                    setShowVisaPrompt(false);
+                  }} className="w-5 h-5 text-purple-600 focus:ring-purple-600" />
                   <div className="flex items-center gap-2">
                     {method.icon}
                     <span className="font-bold text-gray-800">{method.name}</span>
@@ -169,7 +250,7 @@ const BookingPage = () => {
                 <span className="font-semibold text-gray-900">x {duration} months</span>
               </div>
               <div className="flex justify-between">
-                <span>BkonnectHomes Fee</span>
+                <span>BkonnectHostels Fee</span>
                 <span className="text-emerald-600 font-bold border border-emerald-200 bg-emerald-50 px-2 py-0.5 rounded text-xs">FREE</span>
               </div>
             </div>
@@ -182,17 +263,130 @@ const BookingPage = () => {
               <p className="text-right text-xs text-gray-400 mt-1">To be paid directly to the owner.</p>
             </div>
 
-            <button 
-              onClick={() => bookMutation.mutate()}
-              disabled={bookMutation.isPending}
-              className="btn-brand w-full py-4 text-lg flex justify-center items-center gap-2 shadow-lg hover:-translate-y-0.5"
-            >
-              {bookMutation.isPending ? 'Processing...' : <><ShieldCheck size={20} /> Confirm Reservation</>}
-            </button>
-            
-            <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
-              By confirming, you agree to our Terms of Service and Privacy Policy. The owner will hold this room for 48 hours pending payment.
-            </p>
+            {paymentMethod === 'CASH_ON_ARRIVAL' && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl mb-6 text-sm">
+                <span className="font-black flex items-center gap-1 mb-1">⚠️ IMPORTANT WARNING</span>
+                Choosing to pay on arrival <strong className="font-bold underline">does not guarantee</strong> your reservation. This room will remain available and may be booked by another student who pays online first. To secure this room immediately, please select Mobile Money or Visa Card.
+              </div>
+            )}
+
+            {showPinPrompt ? (
+              <div className="bg-purple-50 p-6 rounded-2xl border border-purple-200 fade-in">
+                <h3 className="font-bold text-lg text-purple-900 mb-2">Simulate Mobile Money</h3>
+                <p className="text-sm text-purple-700 mb-4">
+                  {paymentMethod === 'MOBILE_MONEY_MTN' ? 'Money will be sent to owner MTN: 0771286134' : 'Money will be sent to owner Airtel: 0756385186'}
+                </p>
+                
+                {paymentStep === 1 && (
+                  <div className="space-y-3">
+                    <label className="text-sm font-bold text-gray-700">Enter your phone number</label>
+                    <input 
+                      type="text" 
+                      className="input-field py-3" 
+                      placeholder="e.g. 077XXXXXXX" 
+                      value={phoneNumber} 
+                      onChange={e => setPhoneNumber(e.target.value)}
+                    />
+                    <button 
+                      onClick={handleSimulatePayment} 
+                      disabled={!phoneNumber}
+                      className="btn-brand w-full mt-2"
+                    >
+                      Send PIN Prompt
+                    </button>
+                    <button onClick={() => setShowPinPrompt(false)} className="w-full text-sm text-gray-500 mt-2 font-bold hover:text-gray-700">Cancel</button>
+                  </div>
+                )}
+                
+                {paymentStep === 2 && (
+                  <div className="text-center py-6">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                    <p className="font-bold text-purple-900">Waiting for PIN...</p>
+                    <p className="text-sm text-purple-700 mt-2">Please check your phone ({phoneNumber}) and enter your PIN to approve the UGX {totalAmount.toLocaleString()} deduction.</p>
+                  </div>
+                )}
+
+                {paymentStep === 3 && (
+                  <div className="text-center py-6 fade-in">
+                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle size={24} />
+                    </div>
+                    <p className="font-bold text-emerald-800 text-lg">Payment Successful!</p>
+                    <p className="text-sm text-emerald-600 mt-1">Confirming your reservation...</p>
+                  </div>
+                )}
+              </div>
+            ) : showVisaPrompt ? (
+              <div className="bg-blue-50 p-6 rounded-2xl border border-blue-200 fade-in">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-lg text-blue-900">Card Details</h3>
+                  <div className="flex gap-1">
+                    <div className="w-8 h-5 bg-blue-600 rounded flex items-center justify-center text-[10px] font-black text-white italic">VISA</div>
+                    <div className="w-8 h-5 bg-red-500 rounded flex items-center justify-center text-[10px] font-black text-white">MC</div>
+                  </div>
+                </div>
+                
+                {paymentStep === 1 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-600">Cardholder Name</label>
+                      <input type="text" className="input-field py-2.5 text-sm" placeholder="John Doe" value={visaDetails.name} onChange={e => setVisaDetails({...visaDetails, name: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-600">Card Number</label>
+                      <input type="text" className="input-field py-2.5 text-sm font-mono tracking-widest" placeholder="0000 0000 0000 0000" maxLength="19" value={visaDetails.number} onChange={e => setVisaDetails({...visaDetails, number: e.target.value.replace(/\W/gi, '').replace(/(.{4})/g, '$1 ').trim()})} />
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <label className="text-xs font-bold text-gray-600">Expiry (MM/YY)</label>
+                        <input type="text" className="input-field py-2.5 text-sm font-mono" placeholder="MM/YY" maxLength="5" value={visaDetails.expiry} onChange={e => setVisaDetails({...visaDetails, expiry: e.target.value})} />
+                      </div>
+                      <div className="w-24">
+                        <label className="text-xs font-bold text-gray-600">CVC</label>
+                        <input type="text" className="input-field py-2.5 text-sm font-mono" placeholder="123" maxLength="3" value={visaDetails.cvc} onChange={e => setVisaDetails({...visaDetails, cvc: e.target.value})} />
+                      </div>
+                    </div>
+                    
+                    <button onClick={handleSimulateVisaPayment} disabled={!visaDetails.number || !visaDetails.expiry || !visaDetails.cvc} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-md shadow-blue-600/30 mt-2 disabled:opacity-50">
+                      Pay UGX {totalAmount.toLocaleString()}
+                    </button>
+                    <button onClick={() => setShowVisaPrompt(false)} className="w-full text-sm text-gray-500 mt-2 font-bold hover:text-gray-700">Cancel</button>
+                  </div>
+                )}
+                
+                {paymentStep === 2 && (
+                  <div className="text-center py-6">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="font-bold text-blue-900">Processing Payment...</p>
+                    <p className="text-sm text-blue-700 mt-2">Please wait while we securely process your card via the payment gateway.</p>
+                  </div>
+                )}
+
+                {paymentStep === 3 && (
+                  <div className="text-center py-6 fade-in">
+                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle size={24} />
+                    </div>
+                    <p className="font-bold text-emerald-800 text-lg">Payment Successful!</p>
+                    <p className="text-sm text-emerald-600 mt-1">Transaction approved. Securing your room...</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <button 
+                  onClick={handleConfirmReservation}
+                  disabled={bookMutation.isPending}
+                  className="btn-brand w-full py-4 text-lg flex justify-center items-center gap-2 shadow-lg hover:-translate-y-0.5"
+                >
+                  {bookMutation.isPending ? 'Processing...' : <><ShieldCheck size={20} /> {paymentMethod === 'CASH_ON_ARRIVAL' ? 'Request Reservation' : 'Pay & Confirm Reservation'}</>}
+                </button>
+                
+                <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
+                  By confirming, you agree to our Terms of Service and Privacy Policy. The owner will hold this room for 48 hours pending payment.
+                </p>
+              </>
+            )}
           </div>
         </div>
 

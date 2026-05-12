@@ -7,13 +7,15 @@ const prisma = new PrismaClient();
 
 // Create Booking (STUDENT only)
 router.post('/', authenticate, requireRole(['STUDENT']), async (req, res) => {
-  const { hostelId, roomId, startMonth, durationMonths, note } = req.body;
+  const { hostelId, roomId, startMonth, durationMonths, paymentMethod, note, paymentCompleted } = req.body;
 
   try {
     const room = await prisma.room.findUnique({ where: { id: roomId } });
     if (!room || room.status !== 'AVAILABLE') {
       return res.status(400).json({ error: 'Room is not available' });
     }
+
+    const bookingStatus = paymentCompleted ? 'CONFIRMED' : 'PENDING';
 
     const booking = await prisma.booking.create({
       data: {
@@ -22,13 +24,34 @@ router.post('/', authenticate, requireRole(['STUDENT']), async (req, res) => {
         roomId,
         startMonth,
         durationMonths,
+        status: bookingStatus,
+        confirmedAt: paymentCompleted ? new Date() : null,
         note
       }
     });
 
+    const amount = room.monthlyRent * durationMonths;
+    const pMethod = paymentMethod || 'CASH_ON_ARRIVAL';
+    const transactionRef = 'TXN-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+
+    const transaction = await prisma.transaction.create({
+      data: {
+        transactionRef,
+        bookingId: booking.id,
+        studentId: req.user.userId,
+        hostelId,
+        amount,
+        paymentMethod: pMethod,
+        status: paymentCompleted ? 'VERIFIED' : 'PENDING',
+        verifiedAt: paymentCompleted ? new Date() : null,
+        verifiedBy: paymentCompleted ? 'SYSTEM' : null
+      }
+    });
+
+    const roomNewStatus = paymentCompleted ? 'BOOKED' : (pMethod === 'CASH_ON_ARRIVAL' ? 'AVAILABLE' : 'RESERVED');
     await prisma.room.update({
       where: { id: roomId },
-      data: { status: 'RESERVED' }
+      data: { status: roomNewStatus }
     });
 
     const hostel = await prisma.hostel.findUnique({ where: { id: hostelId }});
@@ -36,16 +59,19 @@ router.post('/', authenticate, requireRole(['STUDENT']), async (req, res) => {
       await prisma.notification.create({
         data: {
           userId: hostel.ownerId,
-          type: 'BOOKING',
-          title: 'New Booking Request! 🎉',
-          body: `A student just reserved a room in ${hostel.name}. Please contact them.`,
+          type: paymentCompleted ? 'PAYMENT_VERIFIED' : 'BOOKING',
+          title: paymentCompleted ? 'New Confirmed Booking! 🎉' : 'New Booking Request! 🎉',
+          body: paymentCompleted 
+            ? `A student has booked and paid for a room in ${hostel.name} via ${pMethod.replace(/_/g, ' ')}.`
+            : `A student just reserved a room in ${hostel.name}. They selected ${pMethod.replace(/_/g, ' ')}.`,
           data: JSON.stringify({ bookingId: booking.id })
         }
       });
     }
 
-    res.status(201).json({ message: 'Booking pending owner confirmation', booking });
+    res.status(201).json({ message: 'Booking processed successfully', booking, transaction });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to create booking' });
   }
 });
@@ -82,6 +108,34 @@ router.patch('/:id', authenticate, requireRole(['OWNER']), async (req, res) => {
     res.json({ message: `Booking ${action.toLowerCase()}ed successfully` });
   } catch (error) {
     res.status(500).json({ error: 'Failed to process booking' });
+  }
+});
+
+// Archive Booking (STUDENT only)
+router.put('/:id/archive', authenticate, requireRole(['STUDENT']), async (req, res) => {
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id }
+    });
+
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    if (booking.studentId !== req.user.userId) return res.status(403).json({ error: 'Unauthorized' });
+
+    await prisma.booking.update({
+      where: { id: req.params.id },
+      data: { status: 'COMPLETED' }
+    });
+
+    // Make room available again
+    await prisma.room.update({
+      where: { id: booking.roomId },
+      data: { status: 'AVAILABLE' }
+    });
+
+    res.json({ message: 'Booking archived successfully' });
+  } catch (error) {
+    console.error('Error archiving booking:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

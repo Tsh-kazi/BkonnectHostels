@@ -118,8 +118,8 @@ const HomePage = () => {
           {UNIVERSITIES.map(u => (
             <button
               key={u.name}
-              onClick={() => setUniversity(university === u.name ? '' : u.name)}
-              className={`text-xs font-semibold px-4 py-2 rounded-full flex-shrink-0 border transition-all ${university === u.name ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'}`}
+              onClick={() => setUniversity(university === u.short ? '' : u.short)}
+              className={`text-xs font-semibold px-4 py-2 rounded-full flex-shrink-0 border transition-all ${university === u.short ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300'}`}
             >
               {u.short}
             </button>
@@ -186,7 +186,7 @@ const HomePage = () => {
             </div>
             <div className="hostel-grid">
               {(data || [])
-                .filter(h => h.university === 'Bugema University')
+                .filter(h => h.university === 'Bugema University' || (h.area && h.area.includes('Bugema')))
                 .slice(0, 4)
                 .map(hostel => <HostelCard key={hostel.id} hostel={hostel} />)
               }

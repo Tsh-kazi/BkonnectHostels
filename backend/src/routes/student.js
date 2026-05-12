@@ -12,7 +12,8 @@ router.get('/dashboard', authenticate, requireRole(['STUDENT']), async (req, res
       where: { studentId: req.user.userId },
       include: {
         hostel: true,
-        room: true
+        room: true,
+        transaction: true
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -94,6 +95,50 @@ router.delete('/favourites/:hostelId', authenticate, requireRole(['STUDENT']), a
     res.json({ message: 'Removed from favourites' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to remove favourite' });
+  }
+});
+
+// Submit Payment Receipt
+router.post('/transactions/:id/receipt', authenticate, requireRole(['STUDENT']), async (req, res) => {
+  const { receiptType, receiptUrl } = req.body;
+  try {
+    const transaction = await prisma.transaction.findUnique({ where: { id: req.params.id }, include: { hostel: true }});
+    if (!transaction || transaction.studentId !== req.user.userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const updatedTransaction = await prisma.transaction.update({
+      where: { id: transaction.id },
+      data: {
+        receiptType,
+        receiptUrl,
+        receiptSubmittedAt: new Date(),
+        status: 'AWAITING_VERIFICATION'
+      }
+    });
+
+    await prisma.receiptHistory.create({
+      data: {
+        transactionId: transaction.id,
+        receiptType,
+        receiptUrl: receiptUrl || '',
+        status: 'SUBMITTED'
+      }
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: transaction.hostel.ownerId,
+        type: 'PAYMENT',
+        title: 'Payment Proof Submitted 💰',
+        body: `A student has submitted payment proof for their reservation. Please review it.`,
+      }
+    });
+
+    res.json({ message: 'Receipt submitted successfully', transaction: updatedTransaction });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to submit receipt' });
   }
 });
 

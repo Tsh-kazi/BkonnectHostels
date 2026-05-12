@@ -1,13 +1,42 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, Bookmark, Clock, MapPin } from 'lucide-react';
+import { Home, Bookmark, Clock, MapPin, Upload } from 'lucide-react';
 import api from '../api';
 import HostelCard from '../components/HostelCard';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } })();
+  const [activeTransactionId, setActiveTransactionId] = React.useState(null);
+  const [receiptInput, setReceiptInput] = React.useState('');
+
+  const submitReceiptMutation = useMutation({
+    mutationFn: async ({ id, receiptType, receiptUrl }) => {
+      return await api.post(`/student/transactions/${id}/receipt`, { receiptType, receiptUrl });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['studentDashboard']);
+      setActiveTransactionId(null);
+      setReceiptInput('');
+      alert("Payment proof submitted successfully!");
+    },
+    onError: (err) => {
+      alert(err.response?.data?.error || "Failed to submit payment proof");
+    }
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: async (id) => await api.put(`/bookings/${id}/archive`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['studentDashboard']);
+      alert("Hostel removed from active bookings and moved to history.");
+    },
+    onError: (err) => {
+      alert(err.response?.data?.error || "Failed to archive booking");
+    }
+  });
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['studentDashboard'],
@@ -30,6 +59,9 @@ const StudentDashboard = () => {
   if (error) return <div className="page-content text-center py-20 text-red-500">Error loading dashboard data.</div>;
 
   const { bookings, favourites } = data;
+  
+  const activeBookings = bookings.filter(b => b.status !== 'COMPLETED');
+  const historyBookings = bookings.filter(b => b.status === 'COMPLETED');
 
   const demoImages = [
     '/images/extra-demo-1.jpg',
@@ -70,7 +102,7 @@ const StudentDashboard = () => {
             <Clock size={20} className="text-purple-600" /> My Bookings
           </h2>
           
-          {bookings.length === 0 ? (
+          {activeBookings.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 border border-gray-100 text-center shadow-sm">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                 <Home size={28} />
@@ -81,8 +113,8 @@ const StudentDashboard = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {bookings.map(booking => (
-                <div key={booking.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-5">
+              {activeBookings.map(booking => (
+                <div key={booking.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-5 relative">
                   <div className="sm:w-1/3">
                     <img 
                       src={(!booking.room.photos?.[0]?.url || booking.room.photos?.[0]?.url.includes('http')) ? getDemoImage(booking.hostel.id) : booking.room.photos[0].url} 
@@ -117,9 +149,90 @@ const StudentDashboard = () => {
                       <div><span className="text-gray-400 font-semibold">Move in:</span> <span className="font-bold">{booking.startMonth}</span></div>
                       <div><span className="text-gray-400 font-semibold">Duration:</span> <span className="font-bold">{booking.durationMonths} Mo.</span></div>
                     </div>
+                    
+                    {/* ACTION BUTTONS */}
+                    {booking.status === 'CONFIRMED' && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+                        <button 
+                          onClick={() => {
+                            if(window.confirm("Are you sure you want to remove this hostel? It will be moved to your history and the room will become available again.")) {
+                              archiveMutation.mutate(booking.id);
+                            }
+                          }}
+                          disabled={archiveMutation.isPending}
+                          className="text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-xl transition"
+                        >
+                          Leave Hostel & Move to History
+                        </button>
+                      </div>
+                    )}
+
+                    {booking.status === 'PENDING' && booking.transaction && booking.transaction.status === 'PENDING' && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        {activeTransactionId === booking.transaction.id ? (
+                          <div className="space-y-3 fade-in">
+                            <label className="block text-xs font-bold text-gray-500">Enter Payment Reference Number / Phone Number</label>
+                            <input 
+                              type="text" 
+                              className="input-field py-2 text-sm" 
+                              placeholder="e.g. 077... or TxID" 
+                              value={receiptInput} 
+                              onChange={e => setReceiptInput(e.target.value)} 
+                            />
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => submitReceiptMutation.mutate({ id: booking.transaction.id, receiptType: receiptInput, receiptUrl: '' })}
+                                disabled={submitReceiptMutation.isPending || !receiptInput}
+                                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-xl text-sm disabled:opacity-50 transition"
+                              >
+                                Submit Proof
+                              </button>
+                              <button onClick={() => setActiveTransactionId(null)} className="px-4 bg-gray-100 text-gray-600 font-bold rounded-xl text-sm hover:bg-gray-200 transition">Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button onClick={() => setActiveTransactionId(booking.transaction.id)} className="w-full bg-purple-50 text-purple-700 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition">
+                            <Upload size={16} /> Submit Payment Proof
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {booking.transaction && booking.transaction.status === 'AWAITING_VERIFICATION' && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+                        <span className="text-amber-600 text-sm font-bold bg-amber-50 px-3 py-1 rounded-full border border-amber-200">Payment Under Review</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* HISTORY SECTION */}
+          {historyBookings.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2 opacity-70">
+                <Clock size={20} /> Past Bookings History
+              </h2>
+              <div className="space-y-4 opacity-70 hover:opacity-100 transition-opacity">
+                {historyBookings.map(booking => (
+                  <div key={booking.id} className="bg-gray-50 rounded-2xl p-4 border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+                    <img 
+                      src={(!booking.room.photos?.[0]?.url || booking.room.photos?.[0]?.url.includes('http')) ? getDemoImage(booking.hostel.id) : booking.room.photos[0].url} 
+                      className="w-20 h-20 object-cover rounded-xl grayscale" 
+                      alt="Room" 
+                      onError={(e) => { e.target.onerror = null; e.target.src = demoImages[0]; }}
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-gray-700">{booking.hostel.name}</h3>
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-200 text-gray-600">COMPLETED</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Stayed {booking.startMonth} ({booking.durationMonths} Months)</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

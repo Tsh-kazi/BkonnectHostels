@@ -66,7 +66,7 @@ async function main() {
       data: {
         ownerId: owner.id,
         name: privateHostels[i],
-        category: 'PRIVATE_UNIVERSITY',
+        category: 'PRIVATE_RENTAL',
         university: 'Bugema University',
         streetAddress: 'Main Gate Area',
         area: 'Bugema',
@@ -90,7 +90,7 @@ async function main() {
       data: {
         ownerId: owner.id,
         name: ladiesHostels[i] + ' (Ladies)',
-        category: 'PUBLIC_UNIVERSITY',
+        category: 'UNIVERSITY_HOSTEL',
         university: 'Bugema University',
         streetAddress: 'Campus Road',
         area: 'Bugema',
@@ -115,7 +115,7 @@ async function main() {
       data: {
         ownerId: owner.id,
         name: menHostels[i] + ' (Men)',
-        category: 'PUBLIC_UNIVERSITY',
+        category: 'UNIVERSITY_HOSTEL',
         university: 'Bugema University',
         streetAddress: 'Valley Road',
         area: 'Bugema',

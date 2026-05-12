@@ -12,7 +12,13 @@ router.get('/', async (req, res) => {
   try {
     const where = { isApproved: true, isActive: true };
     if (area) where.area = area;
-    if (university) where.university = university;
+    if (university) {
+      where.OR = [
+        { university: { contains: university } },
+        { area: { contains: university } },
+        { description: { contains: university } }
+      ];
+    }
     if (category) where.category = category;
     
     // Simplistic handling for demo purposes
@@ -54,9 +60,13 @@ router.post('/', authenticate, requireRole(['OWNER']), async (req, res) => {
   if (!req.user.isApproved) return res.status(403).json({ error: 'Owner account pending admin approval' });
 
   try {
+    const owner = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    
     const hostel = await prisma.hostel.create({
       data: {
         ...req.body,
+        contactPhone: req.body.contactPhone || owner.phone,
+        whatsappNumber: req.body.whatsappNumber || owner.whatsappNumber || owner.phone,
         ownerId: req.user.userId,
         isApproved: false // Admin must approve
       }

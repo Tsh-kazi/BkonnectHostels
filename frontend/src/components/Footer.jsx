@@ -14,7 +14,7 @@ const Footer = () => {
               <div className="w-10 h-10 brand-gradient rounded-xl flex items-center justify-center">
                 <span className="text-white font-black text-lg">B</span>
               </div>
-              <span className="text-2xl font-black brand-text">BkonnectHomes</span>
+              <span className="text-2xl font-black brand-text">BkonnectHostels</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
               Connecting students with quality, affordable hostel accommodation near private universities in Kampala, Uganda. Browse, compare, and book with ease.
@@ -24,7 +24,7 @@ const Footer = () => {
                 <MapPin size={14} /> Kampala, Uganda
               </div>
               <div className="flex items-center gap-2 text-gray-400 text-sm">
-                <Mail size={14} /> info@bkonnecthomes.ug
+                <Mail size={14} /> info@BkonnectHostels.ug
               </div>
             </div>
           </div>
@@ -69,7 +69,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-gray-500 text-sm">
-            © 2025 BkonnectHomes. All rights reserved.
+            © 2025 BkonnectHostels. All rights reserved.
           </p>
           <p className="text-gray-500 text-sm flex items-center gap-1">
             Made with <Heart size={12} className="text-pink-400 fill-pink-400 mx-1" /> by Kazi Chris for Students in Uganda
