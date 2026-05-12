@@ -78,7 +78,7 @@ router.post('/', authenticate, requireRole(['STUDENT']), async (req, res) => {
 
 // Confirm/Cancel Booking (OWNER only)
 router.patch('/:id', authenticate, requireRole(['OWNER']), async (req, res) => {
-  const { action } = req.body; // 'CONFIRM' or 'CANCEL'
+  const { action, feedbackMessage } = req.body; // 'CONFIRM' or 'CANCEL'
   try {
     const booking = await prisma.booking.findUnique({ where: { id: req.params.id }, include: { hostel: true } });
     if (!booking || booking.hostel.ownerId !== req.user.userId) {
@@ -94,6 +94,15 @@ router.patch('/:id', authenticate, requireRole(['OWNER']), async (req, res) => {
         where: { id: booking.roomId },
         data: { status: 'BOOKED' }
       });
+      
+      await prisma.notification.create({
+        data: {
+          userId: booking.studentId,
+          type: 'BOOKING_CONFIRMED',
+          title: 'Reservation Confirmed! 🎉',
+          body: `Your reservation at ${booking.hostel.name} is confirmed.` + (feedbackMessage ? ` Owner says: "${feedbackMessage}"` : ''),
+        }
+      });
     } else if (action === 'CANCEL') {
       await prisma.booking.update({
         where: { id: booking.id },
@@ -102,6 +111,15 @@ router.patch('/:id', authenticate, requireRole(['OWNER']), async (req, res) => {
       await prisma.room.update({
         where: { id: booking.roomId },
         data: { status: 'AVAILABLE' }
+      });
+
+      await prisma.notification.create({
+        data: {
+          userId: booking.studentId,
+          type: 'BOOKING_CANCELLED',
+          title: 'Reservation Declined ❌',
+          body: `Your reservation at ${booking.hostel.name} was declined.` + (feedbackMessage ? ` Reason: "${feedbackMessage}"` : ''),
+        }
       });
     }
 

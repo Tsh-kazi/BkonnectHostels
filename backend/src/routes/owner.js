@@ -102,7 +102,7 @@ router.post('/upload-photo', authenticate, requireRole(['OWNER']), async (req, r
 
 // Verify or Reject Transaction
 router.patch('/transactions/:id/verify', authenticate, requireRole(['OWNER']), async (req, res) => {
-  const { action, rejectionReason } = req.body; // 'VERIFY' or 'REJECT'
+  const { action, rejectionReason, feedbackMessage } = req.body; // 'VERIFY' or 'REJECT'
   try {
     const transaction = await prisma.transaction.findUnique({ 
       where: { id: req.params.id },
@@ -138,7 +138,7 @@ router.patch('/transactions/:id/verify', authenticate, requireRole(['OWNER']), a
           userId: transaction.studentId,
           type: 'PAYMENT_VERIFIED',
           title: 'Payment Verified! 🎉',
-          body: `Your payment for ${transaction.hostel.name} has been verified and your booking is confirmed.`,
+          body: `Your payment for ${transaction.hostel.name} has been verified and your booking is confirmed.` + (feedbackMessage ? ` Owner says: "${feedbackMessage}"` : ''),
         }
       });
     } else if (action === 'REJECT') {
@@ -157,7 +157,7 @@ router.patch('/transactions/:id/verify', authenticate, requireRole(['OWNER']), a
           userId: transaction.studentId,
           type: 'PAYMENT_REJECTED',
           title: 'Payment Rejected ❌',
-          body: `Your payment for ${transaction.hostel.name} was rejected. Reason: ${rejectionReason || 'Invalid proof'}.`,
+          body: `Your payment for ${transaction.hostel.name} was rejected. Reason: ${rejectionReason || 'Invalid proof'}.` + (feedbackMessage ? ` Owner says: "${feedbackMessage}"` : ''),
         }
       });
     }

@@ -27,7 +27,13 @@ router.get('/dashboard', authenticate, requireRole(['STUDENT']), async (req, res
       }
     });
 
-    res.json({ bookings, favourites });
+    const notifications = await prisma.notification.findMany({
+      where: { userId: req.user.userId },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+
+    res.json({ bookings, favourites, notifications });
   } catch (error) {
     res.status(500).json({ error: 'Failed to load dashboard summary' });
   }

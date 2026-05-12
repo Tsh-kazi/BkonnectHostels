@@ -433,12 +433,18 @@ const OwnerDashboard = () => {
                                 </div>
                               </div>
                               <div className="flex gap-2">
-                                <button onClick={() => verifyPaymentMutation.mutate({ id: booking.transaction.id, action: 'VERIFY' })} className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold transition text-xs shadow-sm shadow-emerald-500/20">
+                                <button onClick={() => {
+                                  const msg = prompt("Optional feedback message for the student:");
+                                  verifyPaymentMutation.mutate({ id: booking.transaction.id, action: 'VERIFY', feedbackMessage: msg });
+                                }} className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2 rounded-xl font-bold transition text-xs shadow-sm shadow-emerald-500/20">
                                   Verify
                                 </button>
                                 <button onClick={() => {
-                                  const reason = prompt("Reason for rejection:");
-                                  if (reason) verifyPaymentMutation.mutate({ id: booking.transaction.id, action: 'REJECT', rejectionReason: reason });
+                                  const reason = prompt("Reason for rejection (Required):");
+                                  if (reason) {
+                                    const msg = prompt("Optional additional feedback message:");
+                                    verifyPaymentMutation.mutate({ id: booking.transaction.id, action: 'REJECT', rejectionReason: reason, feedbackMessage: msg });
+                                  }
                                 }} className="flex-1 bg-red-100 text-red-600 hover:bg-red-200 py-2 rounded-xl font-bold transition text-xs">
                                   Reject
                                 </button>
@@ -446,10 +452,16 @@ const OwnerDashboard = () => {
                             </div>
                           ) : (
                             <div className="flex flex-col gap-2">
-                              <button onClick={() => confirmBookingMutation.mutate({ id: booking.id, action: 'CONFIRM' })} className="w-full bg-gray-900 hover:bg-black text-white py-3 rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2">
+                              <button onClick={() => {
+                                const msg = prompt("Optional feedback message for the student:");
+                                confirmBookingMutation.mutate({ id: booking.id, action: 'CONFIRM', feedbackMessage: msg });
+                              }} className="w-full bg-gray-900 hover:bg-black text-white py-3 rounded-xl font-bold transition shadow-lg flex items-center justify-center gap-2">
                                 <CheckCircle size={18} /> Confirm Stay
                               </button>
-                              <button onClick={() => confirmBookingMutation.mutate({ id: booking.id, action: 'CANCEL' })} className="w-full bg-red-50 text-red-600 hover:bg-red-100 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                              <button onClick={() => {
+                                const msg = prompt("Optional feedback message for the student (reason for decline):");
+                                confirmBookingMutation.mutate({ id: booking.id, action: 'CANCEL', feedbackMessage: msg });
+                              }} className="w-full bg-red-50 text-red-600 hover:bg-red-100 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
                                 <XCircle size={18} /> Decline Request
                               </button>
                             </div>

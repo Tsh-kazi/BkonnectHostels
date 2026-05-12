@@ -237,11 +237,40 @@ const StudentDashboard = () => {
           )}
         </div>
 
-        {/* RIGHT COL: FAVOURITES */}
-        <div className="lg:col-span-1">
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Bookmark size={20} className="text-pink-500" /> Saved Hostels
-          </h2>
+        {/* RIGHT COL: INBOX & FAVOURITES */}
+        <div className="lg:col-span-1 space-y-8">
+          
+          {/* NOTIFICATIONS / INBOX */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm">🔔</span> 
+              Owner Feedback
+            </h2>
+            {(!data.notifications || data.notifications.length === 0) ? (
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center shadow-sm">
+                <p className="text-gray-500 text-sm">No new messages from owners.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {data.notifications.map(notif => (
+                  <div key={notif.id} className="bg-white rounded-2xl p-4 border border-purple-50 shadow-sm relative overflow-hidden">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500"></div>
+                    <h4 className="font-bold text-gray-900 text-sm mb-1">{notif.title}</h4>
+                    <p className="text-gray-600 text-xs leading-relaxed">{notif.body}</p>
+                    <div className="text-[10px] font-bold text-gray-400 mt-2 uppercase">
+                      {new Date(notif.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* FAVOURITES */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Bookmark size={20} className="text-pink-500" /> Saved Hostels
+            </h2>
 
           {favourites.length === 0 ? (
             <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center shadow-sm">
@@ -256,6 +285,7 @@ const StudentDashboard = () => {
               ))}
             </div>
           )}
+          </div>
         </div>
 
       </div>
